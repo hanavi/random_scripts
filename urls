@@ -1,0 +1,13 @@
+#!/bin/bash
+
+OPT=$(dialog --stdout --menu "URL Selector" 20 80 30  \
+  $( cat $HOME/.urls | \
+     nl -b a | \
+     tr -d "\n" ) )
+
+#echo $OPT
+
+URL=$( sed -n ${OPT}p $HOME/.urls)
+
+echo $URL
+
