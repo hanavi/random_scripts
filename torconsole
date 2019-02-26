@@ -1,0 +1,123 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+
+import sys
+import os
+import requests
+from collections import namedtuple
+import pexpect
+
+from bs4 import BeautifulSoup as bs
+
+
+def run_search(query):
+    """Run search on TPB and return the first page."""
+
+
+    # Use Tor to keep things private
+    url = "http://uj3wazyk5u4hnvtk.onion/search/{}/0/99/0".format(query)
+    proxies = { 'http': "socks5h://10.1.0.11:9100",
+                'https': "socks5h://10.1.0.11:9100" }
+
+    page = requests.get(url, proxies=proxies)
+
+    # Need to do some more error handling
+    if page.status_code == 200:
+        return page.content
+
+
+def parse_search_results(html=None):
+    """Parse the PB search results page."""
+
+    if html is None:
+        html = sys.stdin.read()
+
+    soup = bs(html, "html.parser")
+    lines = soup.find_all("tr")
+
+    Magnet = namedtuple("Magnet", "id description url")
+
+    i = 0
+    magnets = []
+    for line in lines:
+        links = line.find_all('a')
+        if len(links) > 3:
+            description = links[2].text
+            url = links[3].get('href')
+            if url[:6] == "magnet":
+                i += 1
+                magnets.append(Magnet(i, description, url))
+    return magnets
+
+
+def choose_magnets(magnets):
+    """Print the list of returned magnet links for selection."""
+
+    choice = None
+    while choice != 'q':
+
+        print()
+        print("="*79)
+        print("Select a torrent to download")
+        print("-"*79)
+
+        for magnet in magnets:
+            print("{id:2d}. {description}".format(**(magnet._asdict())))
+
+        print("-"*79)
+
+        choice = input("Select a file to download: ")
+
+        # Process our selection
+        if choice != 'q':
+
+            choice = int(choice)
+            for magnet in magnets:
+
+                if magnet.id == choice:
+
+                    print("Sending: {}".format(magnet.description))
+                    send_to_deluge(magnet.url)
+
+        print("="*79)
+        print()
+
+
+def send_to_deluge(magnet):
+    """Log into the Deluge server and send the magnet link."""
+
+    # This is so we can log in to the server
+    if 'SSH_AUTH_SOCK' not in os.environ:
+
+        print("Please start SSH agent first")
+        sys.exit()
+
+    else:
+
+        server = "deluge"
+        child = pexpect.spawn("/usr/bin/ssh", [server])
+        child.expect("james@torrent:~\$ ")
+        child.sendline("deluge-console add '{}'\r".format(magnet))
+        child.expect("james@torrent:~\$ ")
+        child.close()
+
+
+def main():
+    """Run a search on TPB and send links for download."""
+
+    # Make sure we actually have a search term
+    if len(sys.argv) > 1:
+
+        search = " ".join(sys.argv[1:])
+        page = run_search(search)
+        magnets = parse_search_results(page)
+        choose_magnets(magnets)
+
+
+if __name__ == "__main__":
+
+    try:
+        main()
+    except KeyboardInterrupt:
+        print()
