@@ -69,19 +69,24 @@ def choose_magnets(magnets):
 
         choice = input("Select a file to download: ")
 
-        # Process our selection
-        if choice != 'q':
+        try:
+            # Process our selection
+            if choice != 'q':
 
-            choice = int(choice)
-            for magnet in magnets:
+                choice = int(choice)
+                for magnet in magnets:
 
-                if magnet.id == choice:
+                    if magnet.id == choice:
 
-                    print("Sending: {}".format(magnet.description))
-                    send_to_deluge(magnet.url)
+                        print("Sending: {}".format(magnet.description))
+                        send_to_deluge(magnet.url)
 
-        print("="*79)
-        print()
+            print("="*79)
+            print()
+
+        except ValueError:
+
+            print("Please Try Again")
 
 
 def send_to_deluge(magnet):
