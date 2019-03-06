@@ -23,7 +23,7 @@ DL_URL=$BASE_URL/${STATION}.TXT
 echo
 if [[ $HOSTNAME == "thinkpad" ]]
 then
-    [[ ! -z $STATION ]] && curl -s $DL_URL | dunst
+    [[ ! -z $STATION ]] && notify-send "$(curl -s $DL_URL)"
 else
     [[ ! -z $STATION ]] && curl -s $DL_URL
 fi

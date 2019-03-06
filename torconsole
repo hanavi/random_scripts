@@ -20,7 +20,10 @@ def run_search(query):
     proxies = { 'http': "socks5h://10.1.0.11:9100",
                 'https': "socks5h://10.1.0.11:9100" }
 
-    page = requests.get(url, proxies=proxies)
+    try:
+        page = requests.get(url, proxies=proxies)
+    except requests.exceptions.ConnectionError:
+        sys.exit("Failed to connect to TPB...")
 
     # Need to do some more error handling
     if page.status_code == 200:

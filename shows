@@ -1,0 +1,7 @@
+#!/bin/bash
+
+find /mnt/raid/media/Shows \
+  | cut -d "/" -f 6- \
+  | fzf -i --layout=reverse --height=10 --border --color=16
+
+
