@@ -11,9 +11,13 @@ def get_filenames(current_path):
 
     filenames = []
     for filename in current_path.glob("**/*.rar"):
-        with rarfile.RarFile(str(filename)) as rf:
-            for rar_filename in rf.namelist():
-                filenames.append(filename.parent / rar_filename)
+        try:
+            with rarfile.RarFile(str(filename)) as rf:
+                for rar_filename in rf.namelist():
+                    filenames.append(filename.parent / rar_filename)
+        except:
+            pass
+
     return filenames
 
 
